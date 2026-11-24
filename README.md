@@ -11,6 +11,11 @@ Markdown graphs: a tree from a markdown outline, and a web from its caml attribu
 - **`/markdown`**: reads one outline (a nested list, with or without `[[brackets]]`) and one set of [caml](https://github.com/wikibonsai/caml) attributes into the data the other two draw. It does not read links in prose, embeds, YAML frontmatter or index files that span a garden. The only subpath with a runtime dependency.
 - **`/look`**: the colours both wear on a dark and a light paper.
 
+<p align="center">
+  <img src="./img/web.png" width="49%" alt="the web of a plant: the concepts it relates to, in clusters round it"/>
+  <img src="./img/tree.png" width="49%" alt="the tree of a plant: its branches growing rightward"/>
+</p>
+
 🗺️ Map the graph of a [🎋 WikiBonsai](https://github.com/wikibonsai/wikibonsai) garden.
 
 ## Install
