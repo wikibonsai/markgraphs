@@ -2,7 +2,7 @@
   "name": "@wikibonsai/markgraphs",
   "version": "0.0.0",
   "description": "Markdown graphs.",
-  "license": "GPL-3.0",
+  "license": "MIT",
   "author": {
     "name": "manunamz",
     "email": "manunamz@pm.me"
