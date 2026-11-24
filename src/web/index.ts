@@ -1,6 +1,8 @@
 /** the web's surface: the layout and the mount */
 export type {
+  Anchor,
   Cluster,
+  Heading,
   Point,
   Side,
   Web,

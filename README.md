@@ -11,7 +11,7 @@ Graphs from markdown: a tree from an outline, and a web from a concept's attribu
 - **`/markdown`**: the outline and the [caml](https://github.com/wikibonsai/caml) attributes as the data the other two draw. The only subpath with a runtime dependency.
 - **`/look`**: the colours both wear on a dark and a light paper.
 
-🗺️ Draw the graphs of a [🎋 WikiBonsai](https://github.com/wikibonsai/wikibonsai) garden.
+🗺️ Map the graph of a [🎋 WikiBonsai](https://github.com/wikibonsai/wikibonsai) garden.
 
 ## Install
 
@@ -208,7 +208,7 @@ A node's ancestors' names, root excluded, outermost first (`'number › counting
 ### layout
 
 ```ts
-interface LayoutOpts { row: number; rootShown: boolean }
+interface LayoutOpts { row: number; rootShown: boolean; labelWidth: (i: number) => number }
 interface LayoutOut { x: Float32Array; y: Float32Array; span: Float32Array }
 interface LayoutResult { visible: number[]; tall: number; wide: number; rows: number }
 ```
@@ -216,15 +216,14 @@ interface LayoutResult { visible: number[]; tall: number; wide: number; rows: nu
 ### `layoutTree()`
 
 ```ts
-layoutTree(model: TreeModel, open: Uint8Array, labelWidth: (i: number) => number, opts: LayoutOpts, out: LayoutOut): LayoutResult
+layoutTree(model: TreeModel, open: Uint8Array, opts: LayoutOpts, out: LayoutOut): LayoutResult
 ```
 
 Lays out every node reachable through open branches: a row to each leaf and folded branch, a column to each depth, a branch centred on its children. World units are px at scale 1. With the root shown it takes the first column; hidden, its children's blocks are spaced down the side.
 
 - `model`: the model.
 - `open`: which branches are open, 1 per open node.
-- `labelWidth`: the px a node's label takes.
-- `opts`: the row height and whether the root is shown.
+- `opts`: the row height, whether the root is shown, and the px a node's label takes.
 - `out`: arrays the columns, rows and spans are written into.
 - returns: the nodes laid out parents first, the tree's world height and width, and the number of rows.
 
@@ -250,6 +249,9 @@ interface Viewport { W: number; H: number; inset: Inset }
 interface ViewTarget { k: number; tx: number; ty: number }
 interface FitOpts { most: number; squeeze: boolean }
 interface ZoomOpts { least: number; most: number }
+interface Reach { wide: number; kx: number; hug: boolean }                              // how far a tree reaches sideways
+interface ZoomStep { f: number; cx: number; cy: number }                                // a zoom by f about a screen point
+interface ZoomBounds { tall: number; wide: number; zoom: ZoomOpts; least: number }      // what a zoom is held by
 ```
 
 ### `fitView()`
@@ -282,17 +284,15 @@ The scale across: `k`, or when the tree is wider than the window at `k`, held op
 ### `zoomView()`
 
 ```ts
-zoomView(view: ViewTarget, f: number, cx: number, cy: number, v: Viewport, tall: number, wide: number, zoom: ZoomOpts, least: number): ViewTarget
+zoomView(view: ViewTarget, step: ZoomStep, v: Viewport, bounds: ZoomBounds): ViewTarget
 ```
 
-The view zoomed by `f` about the screen point: the point stays put. The scale is held between `zoom.least` (or lower, so the whole tree can always be seen) and `zoom.most`.
+The view zoomed by `step.f` about the screen point: the point stays put. The scale is held between `zoom.least` (or lower, so the whole tree can always be seen) and `zoom.most`.
 
 - `view`: the view.
-- `f`: the factor.
-- `cx`, `cy`: the screen point.
-- `v`, `tall`, `wide`: the viewport and the tree's size.
-- `zoom`: the scale's limits.
-- `least`: the least scale across.
+- `step`: the factor and the screen point.
+- `v`: the viewport.
+- `bounds`: the tree's size, the scale's limits and the least scale across.
 - returns: the view.
 
 ### `branchView()`
@@ -323,7 +323,7 @@ A node brought into view: at least scale 0.9, its column a third of the way acro
 ### `holdTx()`
 
 ```ts
-holdTx(tx: number, v: Viewport, wide: number, kx: number, hug: boolean): number
+holdTx(tx: number, v: Viewport, reach: Reach): number
 ```
 
 `tx` held so the tree stays in reach sideways. Hugging (a hidden root), the tree never stands right of the edge; otherwise it may stand anywhere inside, 14px clear.
@@ -434,8 +434,10 @@ interface WebRelation { kind: string; concepts: string[] }
 interface Web { title: string; relations: WebRelation[] }   // an Entry is one
 
 type Side = 'above' | 'below' | 'left' | 'right';
-interface WebNode extends Point { label: string; name: string; anchor: 'start' | 'middle' | 'end' }
-interface Cluster { kind: string; side: Side; hub: Point; heading: Point & { anchor: 'start' | 'middle' | 'end' }; nodes: WebNode[] }
+type Anchor = 'start' | 'middle' | 'end';
+interface WebNode extends Point { label: string; name: string; anchor: Anchor }
+interface Heading extends Point { anchor: Anchor }
+interface Cluster { kind: string; side: Side; hub: Point; heading: Heading; nodes: WebNode[] }
 interface WebLayout {
   core: { label: string; width: number; height: number };
   clusters: Cluster[];

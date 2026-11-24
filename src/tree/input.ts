@@ -32,10 +32,16 @@ export function nearest(scene: Scene, x: number, y: number): number {
   return hit;
 }
 
-/** binds the host's pointer, wheel and click handlers; `at` maps a client point onto the host. Returns the unbind */
-export type At = (e: { clientX: number; clientY: number }) => Point;
+// what input is bound to: the host, its label layer, and a client point mapped onto the host
+export interface InputSurface {
+  host: HTMLElement;
+  labels: HTMLElement;
+  at: (e: { clientX: number; clientY: number }) => Point;
+}
 
-export function bindInput(host: HTMLElement, labels: HTMLElement, scene: Scene, at: At, act: InputActions): () => void {
+/** binds the host's pointer, wheel and click handlers. Returns the unbind */
+export function bindInput(surface: InputSurface, scene: Scene, act: InputActions): () => void {
+  const { host, labels, at } = surface;
   let drag: Drag | null = null;
   // a click right after a drag is the drag's release, not a pick
   let dragged: boolean = false;

@@ -26,14 +26,18 @@ const PAD: number = 10;
 // where a cluster sits round the core
 export type Side = 'above' | 'below' | 'left' | 'right';
 
-export interface WebNode extends Point { label: string; name: string; anchor: 'start' | 'middle' | 'end' }
+export type Anchor = 'start' | 'middle' | 'end';
+
+export interface WebNode extends Point { label: string; name: string; anchor: Anchor }
+
+export interface Heading extends Point { anchor: Anchor }
 
 export interface Cluster {
   kind: string;
   side: Side;
   // where the core's bond ends and the concepts' begin
   hub: Point;
-  heading: Point & { anchor: 'start' | 'middle' | 'end' };
+  heading: Heading;
   nodes: WebNode[];
 }
 

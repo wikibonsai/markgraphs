@@ -23,6 +23,8 @@ export function thickness(model: TreeModel, i: number): number {
 export interface LayoutOpts {
   row: number;
   rootShown: boolean;
+  // the px a node's label takes
+  labelWidth: (i: number) => number;
 }
 
 export interface LayoutOut {
@@ -42,19 +44,19 @@ export interface LayoutResult {
   rows: number;
 }
 
-/** lays out every node reachable through open branches; `labelWidth(i)` is the px a node's label takes */
-export function layoutTree(model: TreeModel, open: Uint8Array, labelWidth: (i: number) => number, opts: LayoutOpts, out: LayoutOut): LayoutResult {
+/** lays out every node reachable through open branches */
+export function layoutTree(model: TreeModel, open: Uint8Array, opts: LayoutOpts, out: LayoutOut): LayoutResult {
   const { x, y, span } = out;
-  const { row: ROW, rootShown } = opts;
+  const { row: ROW, rootShown, labelWidth } = opts;
   const visible: number[] = [];
   let wide: number = 0;
   let rows: number = 0;
   let row: number = TOP;
-  const order = (i: number): void => {
+  function order(i: number): void {
     visible.push(i);
     if (open[i]) { for (const c of model.kids[i]) { order(c); } }
-  };
-  const place = (i: number): number => {
+  }
+  function place(i: number): number {
     const pad: number = Math.max(0, thickness(model, i) - 5);
     const isOpen: boolean = i === 0 && !rootShown ? true : open[i] === 1;
     if (!isOpen || model.kids[i].length === 0) {
@@ -75,7 +77,7 @@ export function layoutTree(model: TreeModel, open: Uint8Array, labelWidth: (i: n
     y[i] = (y[kids[0]] + y[kids[kids.length - 1]]) / 2;
     span[i] = row - y0;
     return y[i];
-  };
+  }
   if (rootShown) { order(0); } else { for (const s of model.subjects) { order(s); } }
   place(0);
   for (const i of visible) {

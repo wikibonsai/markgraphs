@@ -25,12 +25,12 @@ export interface UnpackedTree extends TreeArrays {
 export function fromNested(root: TreeNode): TreeArrays {
   const names: string[] = [];
   const parents: number[] = [];
-  const walk = (node: TreeNode, parent: number): void => {
+  function walk(node: TreeNode, parent: number): void {
     const i: number = names.length;
     names.push(node.name);
     parents.push(parent);
     for (const kid of node.children) { walk(kid, i); }
-  };
+  }
   walk(root, -1);
   return { names, parents };
 }

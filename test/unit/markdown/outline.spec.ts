@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import type { OutlineNode } from '../../../src/markdown';
 import { bare, readTree, spoken } from '../../../src/markdown';
 
-const outline = (node: OutlineNode | null): unknown => node === null ? null : [node.name, ...node.children.map(outline)];
+function outline(node: OutlineNode | null): unknown {
+  return node === null ? null : [node.name, ...node.children.map(outline)];
+}
 
 describe('readTree', () => {
 

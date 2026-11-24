@@ -28,9 +28,12 @@ export {
 export type {
   FitOpts,
   Inset,
+  Reach,
   Viewport,
   ViewTarget,
+  ZoomBounds,
   ZoomOpts,
+  ZoomStep,
 } from './view';
 export {
   branchView,

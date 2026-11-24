@@ -13,9 +13,23 @@ export function limbDrop(k: number): number { return Math.min(46, 50 * k); }
 /** the screen x where a limb meets the host's edge at screen y */
 export type Edge = (sy: number) => number;
 
-// a cubic from (x0, y0) to (x1, y1), level at both ends, its width easing w0 to w1
+// what a frame is drawn with: the context, the colours, the leaf's path, and the host's edge, paper and hooks
+export interface Pen {
+  g: CanvasRenderingContext2D;
+  look: TreeLook;
+  leaf: Path2D;
+  edge: Edge;
+  bg: string;
+  behind: () => void;
+  front: () => void;
+}
+
+// a branch on screen: a cubic from (x0, y0) to (x1, y1), level at both ends, its width easing w0 to w1
+interface Branch { x0: number; y0: number; w0: number; x1: number; y1: number; w1: number }
+
 const NX: number[] = [], NY: number[] = [], NW: number[] = [];
-function ribbon(p: Path2D, x0: number, y0: number, w0: number, x1: number, y1: number, w1: number): void {
+function ribbon(p: Path2D, b: Branch): void {
+  const { x0, y0, w0, x1, y1, w1 } = b;
   const n: number = Math.min(24, Math.max(6, Math.round((Math.abs(y1 - y0) + Math.abs(x1 - x0)) / 9))), m: number = (x0 + x1) / 2;
   for (let s: number = 0; s <= n; s++) {
     const t: number = s / n, u: number = 1 - t;
@@ -32,12 +46,11 @@ function ribbon(p: Path2D, x0: number, y0: number, w0: number, x1: number, y1: n
 }
 
 // a shown root's branch: its own ribbon, blending from the bark into its band over the first half
-function rootRibbon(
-  g: CanvasRenderingContext2D, look: TreeLook, si: number, x0: number, y0: number, w0: number, x1: number, y1: number, w1: number,
-): void {
+function rootRibbon(pen: Pen, si: number, b: Branch): void {
+  const { g, look } = pen;
   const p: Path2D = new Path2D();
-  ribbon(p, x0, y0, w0, x1, y1, w1);
-  const fill: CanvasGradient = g.createLinearGradient(x0, 0, x1, 0);
+  ribbon(p, b);
+  const fill: CanvasGradient = g.createLinearGradient(b.x0, 0, b.x1, 0);
   fill.addColorStop(0, look.bark);
   fill.addColorStop(0.5, look.subjects[si]);
   g.fillStyle = fill; g.fill(p);
@@ -55,7 +68,8 @@ function bandOf(s: Scene, i: number): number {
 
 // draws the wood: ribbons per band, the halo under the picked and hovered paths. Returns the nodes whose knot or
 // leaf is on screen (the labels' candidates), and leaves each one's hit point in the scene
-function drawWood(g: CanvasRenderingContext2D, s: Scene, look: TreeLook, edge: Edge): number[] {
+function drawWood(s: Scene, pen: Pen): number[] {
+  const { g, look, edge } = pen;
   const { kids, depth, parents, subjects } = s.model;
   const W: number = s.W, H: number = s.H, L: number = s.inset.left, k: number = s.k;
   const ox: number = L + s.tx, q: number = s.kx(), z: number = Math.max(0.45, Math.min(1.5, k));
@@ -85,8 +99,8 @@ function drawWood(g: CanvasRenderingContext2D, s: Scene, look: TreeLook, edge: E
     const w0: number = limb ? w1 * 2.2 + 7 * z : Math.max(w1, Math.min(s.thick(p) * z * 0.85, w1 * 1.6));
     const si: number = bandOf(s, i);
     if (Math.max(w0, w1) < 1.6) { const m: number = (x0 + x1) / 2; thin[si].moveTo(x0, y0); thin[si].bezierCurveTo(m, y0, m, y1, x1, y1); }
-    else if (s.rootShown && depth[i] === 1) { rootRibbon(g, look, si, x0, y0, w0, x1, y1, w1); }
-    else { ribbon(path[si], x0, y0, w0, x1, y1, w1); }
+    else if (s.rootShown && depth[i] === 1) { rootRibbon(pen, si, { x0, y0, w0, x1, y1, w1 }); }
+    else { ribbon(path[si], { x0, y0, w0, x1, y1, w1 }); }
     // the stalk its name stands on
     if (hub && x2 > x1) {
       const e: number = s.open[i] ? Math.max(w1 * 0.9, 1.6) : 1.6;
@@ -111,7 +125,8 @@ function drawWood(g: CanvasRenderingContext2D, s: Scene, look: TreeLook, edge: E
 }
 
 // the knots, hollow open and filled folded, and the leaves
-function drawKnots(g: CanvasRenderingContext2D, s: Scene, look: TreeLook, leaf: Path2D, shown: number[], bg: string): void {
+function drawKnots(s: Scene, pen: Pen, shown: number[]): void {
+  const { g, look, leaf, bg } = pen;
   const { kids } = s.model;
   const dpr: number = s.dpr, k: number = s.k, ox: number = s.inset.left + s.tx, q: number = s.kx(), z: number = Math.max(0.45, Math.min(1.5, k));
   for (const i of shown) {
@@ -141,18 +156,17 @@ function drawKnots(g: CanvasRenderingContext2D, s: Scene, look: TreeLook, leaf: 
 }
 
 /** draws one frame of the tree between the host's hooks; returns the nodes on screen (the labels' candidates) */
-export interface Hooks { behind: () => void; front: () => void }
-
-export function drawScene(g: CanvasRenderingContext2D, s: Scene, look: TreeLook, leaf: Path2D, edge: Edge, bg: string, hooks: Hooks): number[] {
+export function drawScene(s: Scene, pen: Pen): number[] {
+  const { g } = pen;
   const dpr: number = s.dpr;
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.clearRect(0, 0, s.W, s.H);
-  hooks.behind();
+  pen.behind();
   g.save();
   g.beginPath(); g.rect(s.inset.left - 60, 0, s.W, s.H); g.clip();
-  const shown: number[] = drawWood(g, s, look, edge);
-  drawKnots(g, s, look, leaf, shown, bg);
+  const shown: number[] = drawWood(s, pen);
+  drawKnots(s, pen, shown);
   g.restore();
-  hooks.front();
+  pen.front();
   return shown;
 }

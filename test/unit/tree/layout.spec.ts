@@ -13,7 +13,7 @@ function lay(open: number[], row: number = 31, rootShown: boolean = true): Layou
   const out: LayoutOut = { x: new Float32Array(5), y: new Float32Array(5), span: new Float32Array(5) };
   const o: Uint8Array = new Uint8Array(5);
   for (const i of open) { o[i] = 1; }
-  return { ...layoutTree(model, o, width, { row, rootShown }, out), ...out };
+  return { ...layoutTree(model, o, { row, rootShown, labelWidth: width }, out), ...out };
 }
 
 describe('layoutTree', () => {
@@ -50,7 +50,7 @@ describe('layoutTree', () => {
   it('a lone root', () => {
     const lone: TreeModel = buildModel({ names: ['r'], parents: [-1] });
     const out: LayoutOut = { x: new Float32Array(1), y: new Float32Array(1), span: new Float32Array(1) };
-    const l: LayoutResult = layoutTree(lone, new Uint8Array(1), width, { row: 31, rootShown: true }, out);
+    const l: LayoutResult = layoutTree(lone, new Uint8Array(1), { row: 31, rootShown: true, labelWidth: width }, out);
     assert.deepEqual(l.visible, [0]);
     assert.equal(l.rows, 1);
     assert.ok(l.wide > 40);

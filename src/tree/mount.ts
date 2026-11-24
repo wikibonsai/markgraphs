@@ -12,7 +12,7 @@ import { buildModel } from './model';
 import { treeLook } from '../look/look';
 import { COIN_LEAF } from './leaf-shape';
 import { Scene } from './scene';
-import type { Hooks } from './draw';
+import type { Pen } from './draw';
 import { drawScene } from './draw';
 import { LABEL_FONT, LabelLayer, ROOT_FONT } from './labels';
 import { bindInput } from './input';
@@ -213,7 +213,7 @@ export function mountTree(host: HTMLElement, tree: TreeInput, opts: MountOpts = 
   function zoomAt(f: number, cx: number, cy: number): void {
     movedByHand = true;
     const now: ViewTarget = { k: scene.k, tx: scene.tx, ty: scene.ty };
-    const v: ViewTarget = zoomView(now, f, cx, cy, scene.viewport(), scene.tallTo, scene.wide, zoomOpts, across);
+    const v: ViewTarget = zoomView(now, { f, cx, cy }, scene.viewport(), { tall: scene.tallTo, wide: scene.wide, zoom: zoomOpts, least: across });
     scene.k = v.k; scene.tx = v.tx; scene.ty = v.ty; scene.dirty = true;
     opts.onMoved?.();
   }
@@ -263,8 +263,12 @@ export function mountTree(host: HTMLElement, tree: TreeInput, opts: MountOpts = 
     scene.clampView();
     const f: Frame = frame();
     const edge = (sy: number): number => opts.edge ? opts.edge(sy, f) : scene.inset.left;
-    const hooks: Hooks = { behind: (): void => opts.behind?.(g, f), front: (): void => opts.front?.(g, f) };
-    const shown: number[] = drawScene(g, scene, look, leaf, edge, bg ?? look.bg, hooks);
+    const pen: Pen = {
+      g, look, leaf, edge, bg: bg ?? look.bg,
+      behind: (): void => opts.behind?.(g, f),
+      front: (): void => opts.front?.(g, f),
+    };
+    const shown: number[] = drawScene(scene, pen);
     labels.place(shown);
     opts.onFrame?.(f);
   }
@@ -300,7 +304,9 @@ export function mountTree(host: HTMLElement, tree: TreeInput, opts: MountOpts = 
     look = lookOf(paper);
     scene = new Scene(model, measure, { reducedMotion, rootShown, rows, across, fit: fitOpts });
     labels = new LabelLayer(labelHost, scene, look, opts.decorate ?? ((): string[] => []));
-    unbindInput = bindInput(host, labelHost, scene, at, { toggle, pick: select, zoom: zoomAt, hover: (i: number): void => opts.onHover?.(i), moved });
+    unbindInput = bindInput({ host, labels: labelHost, at }, scene, {
+      toggle, pick: select, zoom: zoomAt, hover: (i: number): void => opts.onHover?.(i), moved,
+    });
     host.dataset.paper = paper;
     movedByHand = false;
     resize();

@@ -1,6 +1,6 @@
 /** the tree as drawn: each node's target and drawn position, the fold's tween between them, and the view */
 import type { TreeModel } from './model';
-import type { LayoutOut, LayoutResult } from './layout';
+import type { LayoutOpts, LayoutOut, LayoutResult } from './layout';
 import type { FitOpts, Inset, Viewport } from './view';
 import { layoutTree, thickness } from './layout';
 import { easeInOut, easeOut, holdTx, holdTy, isWhole, scaleAcross } from './view';
@@ -153,7 +153,8 @@ export class Scene {
 
   private lay(row: number): LayoutResult {
     const out: LayoutOut = { x: this.x, y: this.y, span: this.span };
-    return layoutTree(this.model, this.open, (i: number): number => this.labelWidth(i), { row, rootShown: this.rootShown }, out);
+    const opts: LayoutOpts = { row, rootShown: this.rootShown, labelWidth: (i: number): number => this.labelWidth(i) };
+    return layoutTree(this.model, this.open, opts, out);
   }
 
   // the row height that spreads the rows to fill the height at the fit's scale, within the range
@@ -318,7 +319,7 @@ export class Scene {
 
   // the view held inside the tree's reach and the inset
   clampView(): void {
-    this.tx = holdTx(this.tx, this.viewport(), this.wide, this.kx(), !this.rootShown);
+    this.tx = holdTx(this.tx, this.viewport(), { wide: this.wide, kx: this.kx(), hug: !this.rootShown });
     this.ty = holdTy(this.ty, this.tall, this.k, this.H);
   }
 }

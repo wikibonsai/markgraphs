@@ -28,6 +28,9 @@ interface Label {
   state: string;
 }
 
+// where a label stands on screen, its scale and its opacity
+interface Spot { x: number; y: number; fs: number; opacity: number }
+
 export class LabelLayer {
   private readonly host: HTMLElement;
   private readonly scene: Scene;
@@ -79,7 +82,8 @@ export class LabelLayer {
     for (const [i, l] of this.pool) { if (!keep.has(i)) { l.el.remove(); this.pool.delete(i); } }
   }
 
-  private dress(i: number, x: number, y: number, fs: number, opacity: number): void {
+  private dress(i: number, spot: Spot): void {
+    const { x, y, fs, opacity } = spot;
     const s: Scene = this.scene, { model } = s;
     const l: Label = this.label(i), hub: boolean = model.kids[i].length > 0, w: number = s.labelWidth(i) * Math.max(s.kx() / fs, 1);
     const open: boolean = s.open[i] === 1;
@@ -139,7 +143,7 @@ export class LabelLayer {
         for (let b: number = b0; b <= b1; b++) { grid.fill(1, b * gw + a0, b * gw + a1 + 1); }
       }
       keep.add(i);
-      this.dress(i, x, y, fs, Math.min(1, (s.drawnGrow[i] - 0.4) * 2));
+      this.dress(i, { x, y, fs, opacity: Math.min(1, (s.drawnGrow[i] - 0.4) * 2) });
     }
     this.sweep(keep);
   }

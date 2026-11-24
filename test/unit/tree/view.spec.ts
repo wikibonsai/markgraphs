@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import type { ViewTarget, Viewport } from '../../../src/tree/view';
+import type { ViewTarget, Viewport, ZoomBounds } from '../../../src/tree/view';
 import { fitView, holdTx, holdTy, isWhole, revealView, scaleAcross, zoomView } from '../../../src/tree/view';
 
 const inset = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -57,16 +57,18 @@ describe('view', () => {
   describe('zoomView', () => {
 
     it('keeps its point', () => {
-      const z: ViewTarget = zoomView({ k: 1, tx: 10, ty: 20 }, 2, 110, 70, room, 100, 100, { least: 0.15, most: 4 }, 0);
+      const bounds: ZoomBounds = { tall: 100, wide: 100, zoom: { least: 0.15, most: 4 }, least: 0 };
+      const z: ViewTarget = zoomView({ k: 1, tx: 10, ty: 20 }, { f: 2, cx: 110, cy: 70 }, room, bounds);
       assert.ok(Math.abs((110 - z.tx) / z.k - 100) < 1e-9);
       assert.ok(Math.abs((70 - z.ty) / z.k - 50) < 1e-9);
     });
 
     it('has ends, and can always zoom out to see the whole tree', () => {
       const zoom = { least: 0.15, most: 4 };
-      assert.equal(zoomView({ k: 3.9, tx: 0, ty: 0 }, 9, 0, 0, room, 100, 100, zoom, 0).k, 4);
-      assert.equal(zoomView({ k: 0.2, tx: 0, ty: 0 }, 0.01, 0, 0, room, 100, 100, zoom, 0).k, 0.15);
-      assert.equal(zoomView({ k: 0.2, tx: 0, ty: 0 }, 0.01, 0, 0, room, 10000, 100, zoom, 0).k, (300 - 60) / 10000);
+      const bounds = (tall: number): ZoomBounds => ({ tall, wide: 100, zoom, least: 0 });
+      assert.equal(zoomView({ k: 3.9, tx: 0, ty: 0 }, { f: 9, cx: 0, cy: 0 }, room, bounds(100)).k, 4);
+      assert.equal(zoomView({ k: 0.2, tx: 0, ty: 0 }, { f: 0.01, cx: 0, cy: 0 }, room, bounds(100)).k, 0.15);
+      assert.equal(zoomView({ k: 0.2, tx: 0, ty: 0 }, { f: 0.01, cx: 0, cy: 0 }, room, bounds(10000)).k, (300 - 60) / 10000);
     });
 
   });
@@ -74,20 +76,20 @@ describe('view', () => {
   describe('holdTx', () => {
 
     it('hugging: never right of the edge, never past the tree\'s reach', () => {
-      assert.equal(holdTx(50, room, 100, 1, true), 0);
-      assert.equal(holdTx(-9999, room, 1000, 1, true), 400 - 20 - 1000);
+      assert.equal(holdTx(50, room, { wide: 100, kx: 1, hug: true }), 0);
+      assert.equal(holdTx(-9999, room, { wide: 1000, kx: 1, hug: true }), 400 - 20 - 1000);
     });
 
     it('free: anywhere inside when the tree fits, else to its edges', () => {
-      assert.equal(holdTx(50, room, 100, 1, false), 50);
-      assert.equal(holdTx(9999, room, 100, 1, false), 400 - 14 - 100);
-      assert.equal(holdTx(-9999, room, 100, 1, false), 14);
-      assert.equal(holdTx(-9999, room, 1000, 1, false), 400 - 14 - 1000);
-      assert.equal(holdTx(9999, room, 1000, 1, false), 14);
+      assert.equal(holdTx(50, room, { wide: 100, kx: 1, hug: false }), 50);
+      assert.equal(holdTx(9999, room, { wide: 100, kx: 1, hug: false }), 400 - 14 - 100);
+      assert.equal(holdTx(-9999, room, { wide: 100, kx: 1, hug: false }), 14);
+      assert.equal(holdTx(-9999, room, { wide: 1000, kx: 1, hug: false }), 400 - 14 - 1000);
+      assert.equal(holdTx(9999, room, { wide: 1000, kx: 1, hug: false }), 14);
     });
 
     it('the right inset is kept clear', () => {
-      assert.equal(holdTx(-9999, { ...room, inset: { ...inset, right: 100 } }, 1000, 1, true), 400 - 100 - 20 - 1000);
+      assert.equal(holdTx(-9999, { ...room, inset: { ...inset, right: 100 } }, { wide: 1000, kx: 1, hug: true }), 400 - 100 - 20 - 1000);
     });
 
   });

@@ -65,8 +65,9 @@ export function bandColor(hex: number, i: number, n: number, k: number = 1): num
 }
 
 /** a band made bold for the paper: its drift widened, its lightness held in the paper's range, a little bark kept */
-export function branchTone(tone: number, band: number, n: number, bark: number, paper: PaperTokens): number {
-  const c: Color = new Color(bandColor(tone, band, n, SPREAD));
+export function branchTone(band: number, n: number, paper: PaperTokens): number {
+  const bark: number = liftToContrast(BONSAI_BARK, paper.bg, WOOD_CONTRAST, paper.ink);
+  const c: Color = new Color(bandColor(treeTone(), band, n, SPREAD));
   const h: HSL = c.getHSL(true);
   const [l0, l1]: [number, number] = paper.light;
   const l: number = band % 2 === 0 ? l0 + (l1 - l0) * 0.35 : l1 - (l1 - l0) * 0.15;
@@ -96,8 +97,6 @@ export function treeLook(model: TreeModel, paper: Paper): TreeLook {
   const tokens: PaperTokens = PAPERS[paper];
   const bg: number = tokens.bg;
   const dark: boolean = luminance(bg) < 0.2;
-  const bark: number = liftToContrast(BONSAI_BARK, bg, WOOD_CONTRAST, tokens.ink);
-  const tone: number = treeTone();
   // the bands: the subjects with children, in list order (a leaf straight off the root is in no band)
   const bandOf: Int16Array = new Int16Array(model.subjects.length).fill(-1);
   let n: number = 0;
@@ -113,7 +112,7 @@ export function treeLook(model: TreeModel, paper: Paper): TreeLook {
   }
   // a childless subject's stalk and button wear its leaf's colour
   const subjects: string[] = model.subjects.map((s: number, k: number): string =>
-    bandOf[k] < 0 ? leaves[s] : cssHex(branchTone(tone, banded ? bandOf[k] : 0, banded ? n : 1, bark, tokens)));
+    bandOf[k] < 0 ? leaves[s] : cssHex(branchTone(banded ? bandOf[k] : 0, banded ? n : 1, tokens)));
   return {
     paper, dark, bg: cssHex(bg), soil: cssHex(tokens.soil), warm: cssHex(tokens.warm), pick: cssHex(PICK), root: cssHex(tokens.root),
     bark: cssHex(tokens.bark), subjects, leaves,

@@ -8,6 +8,12 @@ export interface Viewport { W: number; H: number; inset: Inset }
 export interface ViewTarget { k: number; tx: number; ty: number }
 export interface FitOpts { most: number; squeeze: boolean }
 export interface ZoomOpts { least: number; most: number }
+// a tree's reach sideways: its world width, the scale across, and whether it hugs the left edge
+export interface Reach { wide: number; kx: number; hug: boolean }
+// a zoom by `f` about the screen point (cx, cy)
+export interface ZoomStep { f: number; cx: number; cy: number }
+// what a zoom is held by: the tree's world size, the scale's limits, and the least scale across
+export interface ZoomBounds { tall: number; wide: number; zoom: ZoomOpts; least: number }
 
 // the margin a fit keeps clear of the inset
 const MARGIN: number = 14;
@@ -36,7 +42,8 @@ export function holdTy(ty: number, tall: number, k: number, H: number): number {
  * `tx` held sideways as far as the tree reaches. Hugging (a hidden root) it never stands right of the edge;
  * free, it stays anywhere inside when it fits, else between its own edges
  */
-export function holdTx(tx: number, v: Viewport, wide: number, kx: number, hug: boolean): number {
+export function holdTx(tx: number, v: Viewport, reach: Reach): number {
+  const { wide, kx, hug } = reach;
   const across: number = v.W - v.inset.left - v.inset.right;
   if (hug) { return Math.min(0, Math.max(tx, across - 20 - wide * kx)); }
   const far: number = across - MARGIN - wide * kx;
@@ -66,10 +73,10 @@ export function revealView(v: Viewport, k: number, x: number, y: number): ViewTa
   return { k: kk, tx: Math.min(0, (v.W - v.inset.left) * 0.35 - x * Math.max(kk, 0.8)), ty: v.H / 2 - y * kk };
 }
 
-/** the view zoomed by `f` about the screen point (cx, cy): the point stays put */
-export function zoomView(
-  view: ViewTarget, f: number, cx: number, cy: number, v: Viewport, tall: number, wide: number, zoom: ZoomOpts, least: number,
-): ViewTarget {
+/** the view zoomed a step: its point stays put */
+export function zoomView(view: ViewTarget, step: ZoomStep, v: Viewport, bounds: ZoomBounds): ViewTarget {
+  const { f, cx, cy } = step;
+  const { tall, wide, zoom, least } = bounds;
   const kk: number = Math.max(Math.min(zoom.least, (v.H - 60) / tall), Math.min(zoom.most, view.k * f)), r: number = kk / view.k;
   const q0: number = scaleAcross(view.k, v, wide, least), q1: number = scaleAcross(kk, v, wide, least);
   const L: number = v.inset.left;
