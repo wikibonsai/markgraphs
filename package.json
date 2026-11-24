@@ -1,7 +1,7 @@
 {
   "name": "@wikibonsai/markgraphs",
   "version": "0.0.0",
-  "description": "Markdown graphs: a tree from an outline and a web from a concept's attributes, drawn on one look. No framework.",
+  "description": "Markdown graphs.",
   "license": "GPL-3.0",
   "author": {
     "name": "manunamz",

@@ -4,11 +4,11 @@
 [![underhood: no magic](https://underhood-badge.netlify.app/badges/code-only.svg)](https://underhood-badge.netlify.app)
 [![NPM package](https://img.shields.io/npm/v/@wikibonsai/markgraphs)](https://npmjs.org/package/@wikibonsai/markgraphs)
 
-Graphs from markdown: a tree from an outline, and a web from a concept's attributes, worn in one look. Each lives on its own subpath, with no framework:
+Markdown graphs: a tree from a markdown outline, and a web from its caml attributes, both in one look. Each lives on its own subpath, with no framework:
 
 - **`/tree`**: an interactive tree. A canvas draws the wood, knots and leaves; the names are real text in the DOM over it, pooled and placed each frame, so a tree of twenty thousand concepts moves at frame rate. Folding, fit, zoom, pan, pinch, keyboard walking, a fold tween, reduced motion and a dark and a light paper are all inside. It takes nodes, not markdown.
 - **`/web`**: a concept at the core, the concepts it relates to in clusters round it, as an svg.
-- **`/markdown`**: the outline and the [caml](https://github.com/wikibonsai/caml) attributes as the data the other two draw. The only subpath with a runtime dependency.
+- **`/markdown`**: reads one outline (a nested list, with or without `[[brackets]]`) and one set of [caml](https://github.com/wikibonsai/caml) attributes into the data the other two draw. It does not read links in prose, embeds, YAML frontmatter or index files that span a garden. The only subpath with a runtime dependency.
 - **`/look`**: the colours both wear on a dark and a light paper.
 
 🗺️ Map the graph of a [🎋 WikiBonsai](https://github.com/wikibonsai/wikibonsai) garden.
