@@ -1,0 +1,12 @@
+{
+  "//": "@wikibonsai declaration-only build — rollup transpiles JS, tsc owns the .d.ts tree (dist/index.d.ts + per-file mirror, resolved via the `types` field). Build script: `rollup -c && tsc -p tsconfig.build.json`. SYNCED from soil-deps/config; do NOT edit in place.",
+  "extends": "@wikibonsai/soil-kit/config/tsconfig.base.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": false,
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test", "spec"]
+}

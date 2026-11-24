@@ -1,0 +1,38 @@
+#! soil-deps
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Yarn (Berry): provisioned by Corepack from packageManager; nothing under .yarn
+# is committed (no binary blob, no cache, no state).
+.yarn/*
+.pnp.*
+
+# Distribution
+dist/
+releases/
+
+# Test output
+.nyc_output/
+
+# Optional npm cache directory
+.npm
+
+# vim
+*.swp
+
+# macos
+.DS_Store
+
+# vscode
+.vscode/
+
+# intellij
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+#! /soil-deps

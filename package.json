@@ -1,0 +1,78 @@
+{
+  "name": "@wikibonsai/markgraphs",
+  "version": "0.0.0",
+  "description": "Markdown graphs: a tree from an outline and a web from a concept's attributes, drawn on one look. No framework.",
+  "license": "GPL-3.0",
+  "author": {
+    "name": "manunamz",
+    "email": "manunamz@pm.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wikibonsai/markgraphs.git"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "exports": {
+    "./tree": {
+      "types": "./dist/tree/index.d.ts",
+      "import": "./dist/tree.mjs",
+      "require": "./dist/tree.cjs",
+      "default": "./dist/tree.mjs"
+    },
+    "./web": {
+      "types": "./dist/web/index.d.ts",
+      "import": "./dist/web.mjs",
+      "require": "./dist/web.cjs",
+      "default": "./dist/web.mjs"
+    },
+    "./markdown": {
+      "types": "./dist/markdown/index.d.ts",
+      "import": "./dist/markdown.mjs",
+      "require": "./dist/markdown.cjs",
+      "default": "./dist/markdown.mjs"
+    },
+    "./look": {
+      "types": "./dist/look/index.d.ts",
+      "import": "./dist/look.mjs",
+      "require": "./dist/look.cjs",
+      "default": "./dist/look.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "rollup -c && tsc -p tsconfig.build.json",
+    "clean": "del dist",
+    "rebuild": "yarn clean && yarn build",
+    "lint": "e=0; eslint \"src/**/*.ts\" \"test/**/*.ts\" || e=1; before-spec; type-placement; exit $e",
+    "format": "eslint --config eslint.format.mjs \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:fix": "eslint --config eslint.format.mjs --fix \"src/**/*.ts\" \"test/**/*.ts\"",
+    "test": "yarn clean && yarn build && nyc mocha",
+    "doc": "doc",
+    "ci": "e=0; yarn test || e=1; yarn lint || e=1; yarn format || e=1; yarn doc || e=1; exit $e"
+  },
+  "packageManager": "yarn@4.18.1",
+  "dependencies": {
+    "@wikibonsai/caml": "^0.0.12"
+  },
+  "resolutions": {
+    "@wikibonsai/caml": "portal:../caml",
+    "@wikibonsai/twine-utils": "portal:../twine-utils"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@wikibonsai/soil-kit": "portal:../soil-kit/ts",
+    "jsdom": "^26.0.0"
+  },
+  "keywords": [
+    "wikibonsai",
+    "markdown",
+    "graph",
+    "tree",
+    "web",
+    "mindmap",
+    "markmap",
+    "visualization"
+  ]
+}

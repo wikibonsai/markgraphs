@@ -1,0 +1,3 @@
+{
+  "extends": "@wikibonsai/soil-kit/config/tsconfig.base.json"
+}
